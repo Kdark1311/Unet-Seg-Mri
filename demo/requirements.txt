@@ -1,0 +1,18 @@
+# Flask web framework
+Flask>=2.2,<3.0
+
+# PyTorch CPU/GPU (Python 3.11)
+torch==2.1.1
+torchvision==0.16.1
+
+# Numpy <2 để tránh xung đột với PyTorch/smp
+numpy>=1.26.0,<2.0
+
+# OpenCV cho xử lý ảnh
+opencv-python>=4.8
+
+# Pillow để đọc/ghi ảnh
+Pillow>=10.0
+
+# Segmentation Models PyTorch tương thích torch>=1.0
+segmentation-models-pytorch==0.5.0

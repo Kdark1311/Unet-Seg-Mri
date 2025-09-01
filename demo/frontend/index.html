@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MRI Segmentation Demo</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+  <h1>🧠 MRI Segmentation Demo</h1>
+  <p class="subtitle">Demo segmentation model (U-Net + ResNet34)</p>
+
+  <form id="upload-form" enctype="multipart/form-data">
+    <div class="radio-group">
+      <label><input type="radio" name="source" value="upload" checked> Upload ảnh </label>
+      <label><input type="radio" name="source" value="test"> Ảnh từ tập test </label>
+    </div>
+
+    <div id="upload-input">
+      <input type="file" name="image" accept="image/*">
+    </div>
+
+    <div id="test-input" style="display:none;">
+      <select id="test-select" name="test_image">
+        <option value="">-- Chọn ảnh test --</option>
+        {% for f in test_files %}
+          <option value="{{ f }}">{{ f }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit">Segment Image</button>
+  </form>
+
+  <h2>Kết quả:</h2>
+  <div class="result-container">
+    <div class="result-card">
+        <img id="realImage" src="" alt="Ảnh gốc"/>
+        <p>Ảnh gốc</p>
+    </div>
+    <div class="result-card">
+      <img id="mask" src="" alt="Mask"/>
+      <p>Mask</p>
+    </div>
+    <div class="result-card">
+      <img id="overlay" src="" alt="Overlay"/>
+      <p>Overlay</p>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
