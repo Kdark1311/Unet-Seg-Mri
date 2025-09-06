@@ -12,13 +12,13 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # LOAD MODEL
 # =========================
 def load_model():
-    model = smp.Unet(
+    model = smp.UnetPlusPlus(
         encoder_name="resnet34",
-        encoder_weights=None,
+        encoder_weights="imagenet",
         in_channels=3,
         classes=1
     )
-    model_path = r"D:\Progamming\Progamming_courses\Python\Segmentation_project\unet_best.pth"
+    model_path = r"D:\Progamming\Progamming_courses\Python\Segmentation_project\unet-report\main\unet_best.pth"
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file {model_path} not found")
     model.load_state_dict(torch.load(model_path, map_location=DEVICE))
