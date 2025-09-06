@@ -70,37 +70,75 @@ def pil_to_base64(pil_img):
 # =========================
 @app.route("/")
 def home():
-    test_dir = r"D:\Progamming\Progamming_courses\Python\Segmentation_project\archive\test"
+    test_dir = r"D:\Progamming\Progamming_courses\Python\Segmentation_project\unet-report\demo\static\images"
     files = []
     if os.path.exists(test_dir):
-        files = [f for f in os.listdir(test_dir) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
+        files = [f for f in os.listdir(test_dir) if f.lower().endswith(".png")]
     return render_template("index.html", test_files=files)
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    if "image" in request.files:
+    if "image" in request.files:     
         file = request.files["image"]
         image = Image.open(file).convert("RGB")
-    elif "test_image" in request.form:
+
+        # Predict
+        original_img, x_tensor = preprocess_image(image)
+        pred_mask_bin, overlay = predict_mask(x_tensor, original_img)
+
+        # Convert sang PIL
+        original_pil = Image.fromarray(original_img)
+        pred_mask_pil = Image.fromarray(pred_mask_bin)
+        overlay_pil = Image.fromarray(overlay)
+        return jsonify({
+            "real": pil_to_base64(original_pil),      # Ảnh gốc
+            "mask": pil_to_base64(pred_mask_pil),     # Mask dự đoán (hiển thị trên web khi upload)
+            "mask_gt": "",                            # Không có mask gốc khi upload
+            "overlay": pil_to_base64(overlay_pil)     # Overlay
+    })
+    elif "test_image" in request.form:  # Ảnh từ test set
         filename = request.form["test_image"]
-        test_dir = r"D:\Progamming\Progamming_courses\Python\Segmentation_project\archive\test"
-        path = os.path.join(test_dir, filename)
-        image = Image.open(path).convert("RGB")
+
+        img_dir  = r"D:\Progamming\Progamming_courses\Python\Segmentation_project\unet-report\demo\static\images"
+        mask_dir = r"D:\Progamming\Progamming_courses\Python\Segmentation_project\unet-report\demo\static\masks"
+
+        img_path = os.path.join(img_dir, filename)
+        if not os.path.exists(img_path):
+            return jsonify({"error": f"Image not found: {filename}"}), 404
+
+        # Ảnh gốc
+        image = Image.open(img_path).convert("RGB")
+        original_img, x_tensor = preprocess_image(image)
+
+        # Predict để tạo OVERLAY từ mask predict
+        pred_mask_bin, overlay = predict_mask(x_tensor, original_img)
+
+        # Tìm mask gốc (ưu tiên trùng tên; nếu không có thì thử thêm _mask trước đuôi mở rộng)
+        mask_path = os.path.join(mask_dir, filename)
+        if not os.path.exists(mask_path):
+            name, ext = os.path.splitext(filename)
+            mask_path_alt = os.path.join(mask_dir, f"{name}_mask{ext}")
+            mask_path = mask_path_alt if os.path.exists(mask_path_alt) else None
+
+        if mask_path and os.path.exists(mask_path):
+            mask_gt_img = Image.open(mask_path).convert("L").resize((original_img.shape[1], original_img.shape[0]))
+            mask_gt_b64 = pil_to_base64(mask_gt_img)
+        else:
+            mask_gt_b64 = ""  # không tìm thấy mask gốc
+
     else:
         return jsonify({"error": "No image provided"}), 400
 
-    original_img, x_tensor = preprocess_image(image)
-    mask_bin, overlay = predict_mask(x_tensor, original_img)
-
-    # Convert sang PIL
+    # Chuẩn bị trả về
     original_pil = Image.fromarray(original_img)
-    mask_pil = Image.fromarray(mask_bin)
+    pred_mask_pil = Image.fromarray(pred_mask_bin)
     overlay_pil = Image.fromarray(overlay)
 
     return jsonify({
-        "real": pil_to_base64(original_pil),   # 🔑 đổi "original" → "real"
-        "mask": pil_to_base64(mask_pil),
-        "overlay": pil_to_base64(overlay_pil)
+        "real": pil_to_base64(original_pil),         # ảnh gốc (base64)
+        "mask": pil_to_base64(pred_mask_pil),        # vẫn trả về MASK PREDICT (KHÔNG hiển thị trên web)
+        "mask_gt": mask_gt_b64,                      # mask gốc (nếu có, để hiển thị)
+        "overlay": pil_to_base64(overlay_pil)        # overlay = ảnh gốc + mask predict
     })
 
 if __name__ == "__main__":

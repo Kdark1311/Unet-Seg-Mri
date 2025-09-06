@@ -46,9 +46,13 @@ form.addEventListener('submit', async (e) => {
     if (res.ok) {
       const data = await res.json();
       console.log(data); // debug
-      realImg.src = data.real;    // 🔑 sửa thành data.real
-      maskImg.src = data.mask;
-      overlayImg.src = data.overlay;
+      realImg.src = data.real;
+      if (selectedSource === 'upload') {
+        maskImg.src = data.mask;     // hiển thị mask dự đoán
+        } else {
+        maskImg.src = data.mask_gt;  // hiển thị mask gốc
+}
+      overlayImg.src = data.overlay;      // overlay từ mask predict
     } else {
       const error = await res.json();
       alert('Error: ' + (error.error || 'Unknown error'));
