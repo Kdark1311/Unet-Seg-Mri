@@ -2,9 +2,12 @@ const form = document.getElementById('upload-form');
 const realImg = document.getElementById('realImage');
 const maskImg = document.getElementById('mask');
 const overlayImg = document.getElementById('overlay');
+const overlayGtImg = document.getElementById('overlayGt');
 const sourceRadios = document.getElementsByName('source');
 const uploadInput = document.getElementById('upload-input');
 const testInput = document.getElementById('test-input');
+const cardMask = document.getElementById('card-mask');
+const cardOverlayGt = document.getElementById('card-overlay-gt');
 
 // Toggle hiển thị input theo lựa chọn
 sourceRadios.forEach(radio => {
@@ -46,13 +49,29 @@ form.addEventListener('submit', async (e) => {
     if (res.ok) {
       const data = await res.json();
       console.log(data); // debug
+
       realImg.src = data.real;
-      if (selectedSource === 'upload') {
-        maskImg.src = data.mask;     // hiển thị mask dự đoán
-        } else {
-        maskImg.src = data.mask_gt;  // hiển thị mask gốc
+
+if (selectedSource === 'upload') {
+  if (data.mask && maskImg) {
+    maskImg.src = data.mask;              
+  }
+  cardMask.style.display = 'block';     
+  cardOverlayGt.style.display = 'none'; 
+} else {
+  if (data.overlay_gt && overlayGtImg) {
+    overlayGtImg.src = data.overlay_gt;   
+  }
+  cardOverlayGt.style.display = 'block';
+  cardMask.style.display = 'none';      
 }
-      overlayImg.src = data.overlay;      // overlay từ mask predict
+
+if (data.overlay && overlayImg) {
+  overlayImg.src = data.overlay;          
+}
+
+overlayImg.src = data.overlay;          // overlay predict
+
     } else {
       const error = await res.json();
       alert('Error: ' + (error.error || 'Unknown error'));

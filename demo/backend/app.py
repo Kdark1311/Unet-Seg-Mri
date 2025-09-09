@@ -91,11 +91,12 @@ def predict():
         pred_mask_pil = Image.fromarray(pred_mask_bin)
         overlay_pil = Image.fromarray(overlay)
         return jsonify({
-            "real": pil_to_base64(original_pil),      # Ảnh gốc
-            "mask": pil_to_base64(pred_mask_pil),     # Mask dự đoán (hiển thị trên web khi upload)
-            "mask_gt": "",                            # Không có mask gốc khi upload
-            "overlay": pil_to_base64(overlay_pil)     # Overlay
-    })
+            "real": pil_to_base64(original_pil),
+            "mask": pil_to_base64(pred_mask_pil),
+            "mask_gt": "",
+            "overlay": pil_to_base64(overlay_pil),
+            "overlay_gt": ""
+})
     elif "test_image" in request.form:  # Ảnh từ test set
         filename = request.form["test_image"]
 
@@ -121,10 +122,21 @@ def predict():
             mask_path = mask_path_alt if os.path.exists(mask_path_alt) else None
 
         if mask_path and os.path.exists(mask_path):
+        # Đọc mask ground truth
             mask_gt_img = Image.open(mask_path).convert("L").resize((original_img.shape[1], original_img.shape[0]))
+            mask_gt_np = np.array(mask_gt_img)
+
+                # Tạo overlay ground truth
+            mask_color = np.zeros_like(original_img)
+            mask_color[mask_gt_np > 127] = (0, 255, 0)  # xanh lá cho ground truth
+            overlay_gt = cv2.addWeighted(mask_color, 0.4, original_img, 0.6, 0)
+
+                 # Convert sang base64
             mask_gt_b64 = pil_to_base64(mask_gt_img)
+            overlay_gt_b64 = pil_to_base64(Image.fromarray(overlay_gt))
         else:
-            mask_gt_b64 = ""  # không tìm thấy mask gốc
+            mask_gt_b64 = ""
+            overlay_gt_b64 = ""  # không tìm thấy mask gốc
 
     else:
         return jsonify({"error": "No image provided"}), 400
@@ -135,11 +147,12 @@ def predict():
     overlay_pil = Image.fromarray(overlay)
 
     return jsonify({
-        "real": pil_to_base64(original_pil),         # ảnh gốc (base64)
-        "mask": pil_to_base64(pred_mask_pil),        # vẫn trả về MASK PREDICT (KHÔNG hiển thị trên web)
-        "mask_gt": mask_gt_b64,                      # mask gốc (nếu có, để hiển thị)
-        "overlay": pil_to_base64(overlay_pil)        # overlay = ảnh gốc + mask predict
-    })
+        "real": pil_to_base64(original_pil),
+        "mask": pil_to_base64(pred_mask_pil),
+        "mask_gt": mask_gt_b64,
+        "overlay": pil_to_base64(overlay_pil),
+        "overlay_gt": overlay_gt_b64    # <--- thêm dòng này
+})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

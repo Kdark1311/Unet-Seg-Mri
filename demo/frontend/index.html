@@ -33,18 +33,27 @@
 
   <h2>Kết quả:</h2>
   <div class="result-container">
-    <div class="result-card">
-        <img id="realImage" src="" alt="Ảnh gốc"/>
-        <p>Ảnh gốc</p>
-    </div>
-    <div class="result-card">
-      <img id="mask" src="" alt="Mask"/>
-      <p>Mask</p>
-    </div>
-    <div class="result-card">
-      <img id="overlay" src="" alt="Overlay"/>
-      <p>Overlay</p>
-    </div>
+  <div class="result-card">
+      <img id="realImage" src="" alt="Ảnh gốc"/>
+      <p>Ảnh gốc</p>
+  </div>
+
+  <div class="result-card" id="card-mask">
+    <img id="mask" src="" alt="Mask"/>
+    <p>Mask</p>
+  </div>
+
+  <div class="result-card">
+    <img id="overlay" src="" alt="Overlay"/>
+    <p>Overlay (Predict)</p>
+  </div>
+
+  <div class="result-card" id="card-overlay-gt">
+    <img id="overlayGt" src="" alt="Overlay Ground Truth"/>
+    <p>Overlay (Ground Truth)</p>
+  </div>
+</div>
+
   </div>
 
   <script src="{{ url_for('static', filename='main.js') }}"></script>
